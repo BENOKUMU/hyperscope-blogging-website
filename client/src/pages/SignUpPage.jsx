@@ -7,6 +7,8 @@ import { Logo, Button, Divider, Inputbox } from "../components";
 import { BiImage } from "react-icons/bi";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 
+const API_URI = import.meta.env.VITE_API_URI;
+
 const SignUpPage = () => {
   const user = {};
 
@@ -20,9 +22,61 @@ const SignUpPage = () => {
   const [file, setFile] = useState("");
   const [fileURL, setFileURL] = useState("");
 
-  const googleLogin = async () => {};
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (response) => {
+      try {
+        const res = await fetch(`${API_URI}/auth/google-signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: response.access_token }),
+        });
+        const result = await res.json();
+        if (res.ok) {
+          toast.success("Google signup successful");
+          window.location.replace("/");
+        } else {
+          toast.error(result.message || "Google signup failed");
+        }
+      } catch (error) {
+        toast.error("An error occurred during Google signup");
+      }
+    },
+    onError: () => {
+      toast.error("Google signup failed");
+    },
+  });
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("firstName", data.firstName);
+    formData.append("lastName", data.lastName);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    if (file) {
+      formData.append("profilePicture", file);
+    }
+
+    try {
+      const res = await fetch(`${API_URI}/auth/register`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast.success("Signup successful");
+        window.location.replace("/sign-in");
+      } else {
+        toast.error(result.message || "Signup failed");
+      }
+    } catch (error) {
+      toast.error("An error occurred during signup");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
